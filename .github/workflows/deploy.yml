@@ -22,7 +22,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 현재 디렉토리 확인 (디버깅용, 필요 시 제거 가능)
+      
       - name: List current directory
         run: ls -la
 
