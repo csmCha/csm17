@@ -20,9 +20,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to S3
-        uses: aws-actions/s3-sync@v1
-        with:
-          bucket: "csm17s3"
-          region: ${{ secrets.AWS_REGION }}
-          source-dir: "./"
+      - name: Sync files to S3
+        run: |
+          aws s3 sync . s3://csm17s3 --delete
