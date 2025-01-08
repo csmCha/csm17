@@ -1,4 +1,4 @@
-name: Deploy to S3
+name: Test AWS Credentials
 
 on:
   push:
@@ -6,20 +6,16 @@ on:
       - main
 
 jobs:
-  deploy:
+  test-aws:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2 
+          aws-region: ${{ secrets.AWS_REGION }}
 
-
-      - name: Sync files to S3
-        run: aws s3 sync . s3://csm17s3 --delete
+      - name: Verify AWS CLI
+        run: aws s3 ls
