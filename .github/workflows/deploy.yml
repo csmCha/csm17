@@ -1,4 +1,4 @@
-name: Test AWS Credentials
+name: Deploy to S3
 
 on:
   push:
@@ -6,10 +6,15 @@ on:
       - main
 
 jobs:
-  test-aws:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # GitHub 리포지토리 코드 가져오기
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # AWS 자격 증명 구성
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -17,5 +22,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Verify AWS CLI
-        run: aws s3 ls
+      # 현재 디렉토리 확인 (디버깅용, 필요 시 제거 가능)
+      - name: List current directory
+        run: ls -la
+
+      # S3로 파일 동기화
+      - name: Sync files to S3
+        run: aws s3 sync . s3://csm17s3/ --delete
