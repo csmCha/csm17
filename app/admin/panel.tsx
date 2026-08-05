@@ -1,120 +1,109 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 
 interface User {
   id: string;
-  email: string;
   name: string;
-  role: string;
+  topic: string;
+  level: string;
   created_at: string;
 }
 
 export default function AdminPanel() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching users:', error);
+    } else {
+      setUsers(data || []);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/admin/users");
-      if (!res.ok) throw new Error("Failed to load user list.");
-      const data = await res.json();
-      setUsers(data.users || []);
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
-    } finally {
-      setLoading(false);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this participant?')) return;
+
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert('Failed to delete participant.');
+    } else {
+      setUsers(users.filter((user) => user.id !== id));
     }
   };
-
-  const handleDeleteUser = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-
-    try {
-      const res = await fetch(`/api/admin/users/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete user.");
-      
-      alert("User deleted successfully.");
-      fetchUsers();
-    } catch (err: any) {
-      alert(err.message || "An error occurred while deleting user.");
-    }
-  };
-
-  if (loading) return <div className="p-4">Loading user data...</div>;
-  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">User Management</h2>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Participant Management</h2>
         <button
           onClick={fetchUsers}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          className="px-3 py-1.5 bg-[#1C2826] text-white text-xs font-semibold rounded hover:bg-opacity-90 transition-colors"
         >
-          Refresh
+          Refresh List
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Role
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Created At
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-8 text-sm text-[#1C2826]/60">Loading participants...</div>
+      ) : users.length === 0 ? (
+        <div className="text-center py-8 text-sm text-[#1C2826]/60">No participants signed up yet.</div>
+      ) : (
+        <div className="overflow-x-auto border border-[#1C2826]/10 rounded-lg bg-white shadow-sm">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#1C2826]/5 text-xs uppercase font-semibold border-b border-[#1C2826]/10">
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  No users found.
-                </td>
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Topic</th>
+                <th className="px-4 py-3">Level</th>
+                <th className="px-4 py-3">Signed Up At</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
-            ) : (
-              users.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.name || "N/A"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(user.created_at).toLocaleDateString()}
+            </thead>
+            <tbody className="divide-y divide-[#1C2826]/10">
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-black/5 transition-colors">
+                  <td className="px-4 py-3 font-medium">{user.name}</td>
+                  <td className="px-4 py-3">{user.topic}</td>
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-0.5 text-xs rounded bg-[#1C2826]/10 font-mono">
+                      {user.level}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-4 py-3 text-xs text-[#1C2826]/60">
+                    {new Date(user.created_at).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right">
                     <button
-                      onClick={() => handleDeleteUser(user.id)}
-                      className="text-red-600 hover:text-red-900 ml-4"
+                      onClick={() => handleDelete(user.id)}
+                      className="text-xs text-red-600 hover:underline font-semibold"
                     >
                       Delete
                     </button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

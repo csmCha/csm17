@@ -1,21 +1,19 @@
-import "./globals.css";
-import { Inter } from "next/font/google";
+import type { Metadata } from 'next'
+import './globals.css'
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata = {
-  title: "My Application",
-  description: "Web application built with Next.js and Supabase",
-};
+export const metadata: Metadata = {
+  title: 'LTE Table Maker',
+  description: 'Friday Meetup English Table Maker App',
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
-  );
+  )
 }
